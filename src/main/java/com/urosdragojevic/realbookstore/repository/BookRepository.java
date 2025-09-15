@@ -43,17 +43,34 @@ public class BookRepository {
 
     public List<Book> search(String searchTerm) throws SQLException {
         List<Book> bookList = new ArrayList<>();
-        String query = "SELECT DISTINCT b.id, b.title, b.description, b.author FROM books b, books_to_genres bg, genres g" +
+        /*String query = "SELECT DISTINCT b.id, b.title, b.description, b.author FROM books b, books_to_genres bg, genres g" +
                 " WHERE b.id = bg.bookId" +
                 " AND bg.genreId = g.id" +
                 " AND (UPPER(b.title) like UPPER('%" + searchTerm + "%')" +
                 " OR UPPER(g.name) like UPPER('%" + searchTerm + "%'))";
+         */
+        String query = "SELECT DISTINCT b.id, b.title, b.description, b.author " +
+                "FROM books b, books_to_genres bg, genres g " +
+                "WHERE b.id = bg.bookId " +
+                "AND bg.genreId = g.id " +
+                "AND (UPPER(b.title) LIKE ? OR UPPER(g.name) LIKE ?)";
+
+        String searchPattern = "%" + searchTerm.toUpperCase() + "%";
+
         try (Connection connection = dataSource.getConnection();
-             Statement statement = connection.createStatement();
-             ResultSet rs = statement.executeQuery(query)) {
-            while (rs.next()) {
-                bookList.add(createBookFromResultSet(rs));
+             //Statement statement = connection.createStatement();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+
+            statement.setString(1, searchPattern);
+            statement.setString(2, searchPattern);
+
+
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    bookList.add(createBookFromResultSet(rs));
+                }
             }
+
         }
         return bookList;
     }
