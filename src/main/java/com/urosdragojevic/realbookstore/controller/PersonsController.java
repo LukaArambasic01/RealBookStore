@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -41,6 +42,7 @@ public class PersonsController {
     }
 
     @GetMapping("/myprofile")
+    @PreAuthorize("hasAuthority('VIEW_MY_PROFILE')")
     public String self(Model model, Authentication authentication) {
         User user = (User) authentication.getPrincipal();
         model.addAttribute("person", personRepository.get("" + user.getId()));
@@ -56,6 +58,7 @@ public class PersonsController {
     }
 
     @PostMapping("/update-person")
+    @PreAuthorize("hasAuthority('UPDATE_PERSON')")
     public String updatePerson(Person person, HttpSession session, @RequestParam("csrfToken") String csrfToken) throws AccessDeniedException {
         String csrf = session.getAttribute("CSRF_TOKEN").toString();
         if (!csrf.equals(csrfToken)) {
@@ -73,6 +76,7 @@ public class PersonsController {
 
     @GetMapping(value = "/persons/search", produces = "application/json")
     @ResponseBody
+    @PreAuthorize("hasAuthority('VIEW_PERSONS_LIST')")
     public List<Person> searchPersons(@RequestParam String searchTerm) throws SQLException {
         return personRepository.search(searchTerm);
     }
